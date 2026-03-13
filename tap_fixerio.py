@@ -58,15 +58,16 @@ def do_sync(base, start_date, access_key, symbols=None):
 
     try:
         while True:
+            if datetime.strptime(next_date, DATE_FORMAT) > datetime.utcnow():
+                break
+
             if symbols:
                 response = request(base_url + next_date, {'base': base, 'access_key': access_key, 'symbols': ','.join(symbols)})
             else:
                 response = request(base_url + next_date, {'base': base, 'access_key': access_key})
             payload = response.json()
 
-            if datetime.strptime(next_date, DATE_FORMAT) > datetime.utcnow():
-                break
-            elif payload.get('error'):
+            if payload.get('error'):
                 raise RuntimeError(payload['error'])
             else:
                 singer.write_records('exchange_rate', [parse_response(payload)])
